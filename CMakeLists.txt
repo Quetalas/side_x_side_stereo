@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,7 +110,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES side_x_side_stereo
 #  CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
-  CATKIN_DEPENDS cv_bridge image_transport camera_info_manager roscpp sensor_msgs std_msgs
+  CATKIN_DEPENDS cv_bridge image_transport camera_info_manager roscpp sensor_msgs std_msgs tf
 #  DEPENDS system_lib
 )
 

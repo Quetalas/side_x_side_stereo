@@ -40,8 +40,8 @@
 #include <sensor_msgs/image_encodings.h>
 #include <image_transport/image_transport.h>
 #include <camera_info_manager/camera_info_manager.h>
-
-
+#include <tf/transform_broadcaster.h>
+#include <ros/console.h>
 // If non-zero, outputWidth and outputHeight set the size of the output images.
 // If zero, the outputWidth is set to 1/2 the width of the input image, and
 // outputHeight is the same as the height of the input image.
@@ -100,11 +100,15 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         cv_bridge::CvImage cvImage;
         sensor_msgs::ImagePtr img;
         cvImage.encoding = "rgb8";
+        cvImage.header.frame_id="camera_link";
+        cvImage.header.stamp =  ros::Time::now();
+        ros::Time now_time = ros::Time::now();
         if (leftImagePublisher.getNumSubscribers() > 0
             || leftCameraInfoPublisher.getNumSubscribers() > 0)
         {
             cvImage.image = use_scaled ? leftScaled : leftImage;
             img = cvImage.toImageMsg();
+            //img->header.stamp = now_time;
             leftImagePublisher.publish(img);
             leftCameraInfoMsg.header.stamp = img->header.stamp;
             leftCameraInfoPublisher.publish(leftCameraInfoMsg);
@@ -114,6 +118,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         {
             cvImage.image = use_scaled ? rightScaled : rightImage;
             img = cvImage.toImageMsg();
+            //img->header.stamp = now_time;
             rightImagePublisher.publish(img);
             rightCameraInfoMsg.header.stamp = img->header.stamp;
             rightCameraInfoPublisher.publish(rightCameraInfoMsg);
@@ -125,7 +130,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "sxs_stereo");
-    ros::NodeHandle nh("sxs_stereo");
+    ros::NodeHandle nh("");
     ros::NodeHandle nh_left(nh, "left");
     ros::NodeHandle nh_right(nh, "right");
 
@@ -136,8 +141,8 @@ int main(int argc, char** argv)
         new camera_info_manager::CameraInfoManager(nh_left);
     right_cinfo_ =
         new camera_info_manager::CameraInfoManager(nh_right);
-    left_cinfo_->loadCameraInfo("");
-    right_cinfo_->loadCameraInfo("");
+    left_cinfo_->loadCameraInfo("file:///home/quetalas/.ros/left/camera_info/camera.yaml");
+    right_cinfo_->loadCameraInfo("file:///home/quetalas/.ros/right/camera_info/camera.yaml");
 
     // Pre-fill camera_info messages.
     leftCameraInfoMsg = left_cinfo_->getCameraInfo();
@@ -147,16 +152,16 @@ int main(int argc, char** argv)
     std::string inputImageTopic, leftOutputImageTopic, rightOutputImageTopic,
         leftCameraInfoTopic, rightCameraInfoTopic;
     nh.param("input_image_topic", inputImageTopic, 
-        std::string("input_image_topic_not_set"));
+        std::string("/my_cam/image_raw"));
     ROS_INFO("input topic to stereo splitter=%s\n", inputImageTopic.c_str());
     nh.param("left_output_image_topic", leftOutputImageTopic,
-        std::string("/sxs_stereo/left/image_raw"));
+        std::string("left/image_raw"));
     nh.param("right_output_image_topic", rightOutputImageTopic,
-        std::string("/sxs_stereo/right/image_raw"));
+        std::string("right/image_raw"));
     nh.param("left_camera_info_topic", leftCameraInfoTopic,
-        std::string("/sxs_stereo/left/camera_info"));
+        std::string("camera_info"));
     nh.param("right_camera_info_topic", rightCameraInfoTopic,
-        std::string("/sxs_stereo/right/camera_info"));
+        std::string("camera_info"));
     nh.param("output_width", outputWidth, 0);  // 0 -> use 1/2 input width.
     nh.param("output_height", outputHeight, 0);  // 0 -> use input height.
 
