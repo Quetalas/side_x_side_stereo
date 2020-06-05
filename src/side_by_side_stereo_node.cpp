@@ -101,14 +101,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         sensor_msgs::ImagePtr img;
         cvImage.encoding = "rgb8";
         cvImage.header.frame_id="camera_link";
-        cvImage.header.stamp =  ros::Time::now();
-        ros::Time now_time = ros::Time::now();
+        //cvImage.header.stamp =  ros::Time::now();
+        cvImage.header.stamp =  cvImg->header.stamp;
         if (leftImagePublisher.getNumSubscribers() > 0
             || leftCameraInfoPublisher.getNumSubscribers() > 0)
         {
             cvImage.image = use_scaled ? leftScaled : leftImage;
             img = cvImage.toImageMsg();
-            //img->header.stamp = now_time;
             leftImagePublisher.publish(img);
             leftCameraInfoMsg.header.stamp = img->header.stamp;
             leftCameraInfoPublisher.publish(leftCameraInfoMsg);
@@ -118,7 +117,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         {
             cvImage.image = use_scaled ? rightScaled : rightImage;
             img = cvImage.toImageMsg();
-            //img->header.stamp = now_time;
             rightImagePublisher.publish(img);
             rightCameraInfoMsg.header.stamp = img->header.stamp;
             rightCameraInfoPublisher.publish(rightCameraInfoMsg);
@@ -141,8 +139,8 @@ int main(int argc, char** argv)
         new camera_info_manager::CameraInfoManager(nh_left);
     right_cinfo_ =
         new camera_info_manager::CameraInfoManager(nh_right);
-    left_cinfo_->loadCameraInfo("file:///home/quetalas/.ros/left/camera_info/camera.yaml");
-    right_cinfo_->loadCameraInfo("file:///home/quetalas/.ros/right/camera_info/camera.yaml");
+    left_cinfo_->loadCameraInfo("file:///home/evgeny/.ros/left/camera_info/camera.yaml");
+    right_cinfo_->loadCameraInfo("file:///home/evgeny/.ros/right/camera_info/camera.yaml");
 
     // Pre-fill camera_info messages.
     leftCameraInfoMsg = left_cinfo_->getCameraInfo();
@@ -152,7 +150,7 @@ int main(int argc, char** argv)
     std::string inputImageTopic, leftOutputImageTopic, rightOutputImageTopic,
         leftCameraInfoTopic, rightCameraInfoTopic;
     nh.param("input_image_topic", inputImageTopic, 
-        std::string("/my_cam/image_raw"));
+        std::string("/stereocamera/image_raw"));
     ROS_INFO("input topic to stereo splitter=%s\n", inputImageTopic.c_str());
     nh.param("left_output_image_topic", leftOutputImageTopic,
         std::string("left/image_raw"));
